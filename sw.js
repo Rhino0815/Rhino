@@ -1,5 +1,5 @@
 /* Bahn 4: Offline-Speicher für die App-Dateien. Bei jeder Änderung an der App VERSION erhöhen. */
-const VERSION = "bahn4-v1.0.1";
+const VERSION = "bahn4-v1.0.2";
 const FILES = [
   "./", "index.html", "manifest.webmanifest", "vendor/jszip.min.js",
   "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png",
