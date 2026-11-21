@@ -107,6 +107,22 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none}
 .drop.over{border-color:var(--accent);background:var(--soft)}
 ol.steps{margin:0;padding-left:1.3em;display:grid;gap:6px}
 .person{display:flex;align-items:center;gap:14px}
+.photo-cta{display:flex;gap:14px;align-items:center;text-decoration:none;color:var(--ink);border-color:var(--accent)}
+.photo-cta:hover{background:var(--soft)}
+.cam{width:44px;height:44px;border-radius:12px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.cam svg{width:24px;height:24px}
+.thumbs{display:flex;gap:10px;flex-wrap:wrap}
+.thumb{position:relative;width:96px;height:96px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--soft)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font:inherit;font-weight:600;cursor:pointer;line-height:1}
+.fres{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px}
+.fres.unsure{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 8%,var(--surface))}
+.fres.off{opacity:.5}
+.fres .form{grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px}
+.check{display:flex;gap:8px;align-items:center;font-weight:600}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+.spinner{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .avatar{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-display);font-size:1.4rem;font-weight:700;flex:none}
 @media (max-width:720px){
   .tag{display:none}
@@ -158,8 +174,8 @@ const NAV=[["start","Start","start"],["bestzeiten","Bestzeiten","best"],["wettka
 
 /* ---------- Zustand ---------- */
 let profile=null;const meets=new Map();
-let db=null, downloads=null, mode="loading", canWrite=true, loadNote="";
-const ui={chart:null,editRef:null,erfMeet:"",imp:null};
+let db=null, downloads=null, sample=null, imgLimits=null, mode="loading", canWrite=true, loadNote="";
+const ui={chart:null,editRef:null,erfMeet:"",imp:null,foto:{files:[],state:"idle",msg:"",data:null,ctl:null}};
 
 /* ---------- Hilfen ---------- */
 const $=s=>document.querySelector(s);
@@ -220,7 +236,7 @@ function writeError(e){
 function route(){const h=location.hash.slice(1)||"start";const i=h.indexOf("-");return i<0?{v:h,id:null}:{v:h.slice(0,i),id:h.slice(i+1)}}
 window.addEventListener("hashchange",()=>{render(true);window.scrollTo(0,0)});
 function renderNav(){
-  const r=route().v;const cur=r==="wettkampf"?"wettkaempfe":r;
+  const r=route().v;const cur=r==="wettkampf"?"wettkaempfe":r==="foto"?"erfassen":r;
   $("#nav").innerHTML=NAV.filter(([k])=>canWrite||k!=="erfassen").map(([k,l,i])=>`<a href="#${k}" ${k===cur?'aria-current="page"':""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[i]}</svg><span>${l}</span></a>`).join("");
   $("#tagline").textContent=profile?`Wettkampf-Logbuch von ${fullName()}`:"Persönliches Wettkampf-Logbuch";
 }
@@ -228,9 +244,9 @@ let formOpen=false;
 function render(force){
   renderNav();
   const {v,id}=route();
-  if(!force&&formOpen&&(v==="erfassen"||v==="profil"||v==="wettkampf"||v==="start"))return; // nicht unter dem Tippen neu aufbauen
+  if(!force&&formOpen&&(v==="erfassen"||v==="profil"||v==="wettkampf"||v==="start"||v==="foto"))return; // nicht unter dem Tippen neu aufbauen
   formOpen=false;
-  const views={start:vStart,bestzeiten:vBest,wettkaempfe:vMeets,wettkampf:vMeet,erfassen:vErfassen,profil:vProfil};
+  const views={start:vStart,bestzeiten:vBest,wettkaempfe:vMeets,wettkampf:vMeet,erfassen:vErfassen,profil:vProfil,foto:vFoto};
   const fn=views[v]||vStart;
   $("#app").innerHTML=banner()+(mode==="loading"?`<div class="panel"><div class="empty">Logbuch wird geladen …</div></div>`:fn(id));
   if(mode!=="loading"&&after[v])after[v](id);
@@ -396,7 +412,8 @@ function vErfassen(){
   if(ui.editRef){const m=meets.get(ui.editRef.meet);r=m&&(m.results||[]).find(x=>x.id===ui.editRef.id);if(r)meetId=ui.editRef.meet;else ui.editRef=null}
   const ms=sortedMeets();if(!meetId||(!meets.has(meetId)&&meetId!=="__new"))meetId=ms.length?ms[0][0]:"__new";
   const ek=r?evKey(r.distanz,r.lage):(ui.lastEv||"100-FR");
-  return`<form class="panel" id="erf" novalidate>
+  return`${r?"":`<a class="panel photo-cta" href="#foto"><span class="cam" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg></span><span><b>Ergebnisse vom Foto übernehmen</b><br><span class="hint">Ergebnisliste, Urkunde oder Notizzettel fotografieren, Claude liest die Zeiten heraus.</span></span></a>`}
+  <form class="panel" id="erf" novalidate>
     <div><div class="eyebrow">${esc(fullName())}</div><h1>${r?"Ergebnis ändern":"Ergebnis erfassen"}</h1></div>
     <div class="form">
       <div class="field wide"><label for="eMeet">Wettkampf</label><select id="eMeet" ${r?"disabled":""}>${ms.map(([id,m])=>`<option value="${id}" ${id===meetId?"selected":""}>${fmtDate(m.datum)} · ${esc(m.name)}</option>`).join("")}<option value="__new" ${meetId==="__new"?"selected":""}>+ Neuen Wettkampf anlegen</option></select></div>
@@ -493,6 +510,149 @@ after.profil=()=>{
   if(ui.imp){formOpen=true;$("#impAth").addEventListener("change",e=>{ui.imp.sel=+e.target.value;impPreview()});impPreview()}
   const rf=$("#restoreFile");if(rf)rf.addEventListener("change",()=>rf.files[0]&&restore(rf.files[0]));
 };
+
+/* ---------- Ansicht: Foto-Import ---------- */
+function vFoto(){
+  if(!canWrite)return`<div class="panel"><div class="empty">Zum Erfassen fehlt dir das Bearbeitungsrecht.</div></div>`;
+  if(!profile)return`<div class="panel"><div class="empty">Lege zuerst das Profil an.<a class="btn" href="#start">Zur Einrichtung</a></div></div>`;
+  const F=ui.foto;
+  const head=`<div><div class="eyebrow"><a href="#erfassen">Erfassen</a> / Foto</div><h1>Ergebnisse vom Foto übernehmen</h1></div>`;
+  if(!sample||!imgLimits)return`<div class="panel">${head}<p class="muted" style="max-width:62ch">Die Fotoerkennung ist in dieser Ansicht nicht verfügbar. Öffne das Bahnbuch angemeldet in claude.ai oder in der Claude-App. Alternativ kannst du die Fotos Claude im Chat schicken und die Ergebnisse dort eintragen lassen.</p></div>`;
+  if(F.state==="running")return`<div class="panel">${head}<div class="empty"><div class="spinner" role="status" aria-label="Wird gelesen"></div><b>Claude liest ${F.files.length===1?"das Foto":F.files.length+" Fotos"} …</b><span class="hint">Das dauert meist 20 bis 60 Sekunden.</span><button class="btn ghost" data-act="fotoStop">Abbrechen</button></div></div>`;
+  if(F.state==="review"){formOpen=true;return`<div class="panel">${head}${fotoReview()}</div>`}
+  return`<div class="panel">${head}
+    <p class="muted" style="max-width:62ch">Fotografiere eine Ergebnisliste, eine Urkunde oder deine Notizen. Claude sucht darin die Ergebnisse von <b>${esc(fullName())}</b> (Jg. ${profile.jahrgang}). Du prüfst alles, bevor es gespeichert wird.</p>
+    <label class="drop" for="fotoFile"><span class="cam" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg></span><b>Foto aufnehmen oder auswählen</b><span class="hint">Bis zu ${imgLimits.maxCount} Fotos auf einmal, zum Beispiel alle Seiten einer Ergebnisliste</span><input id="fotoFile" type="file" accept="${esc(imgLimits.mediaTypes.join(","))}" multiple style="max-width:260px"></label>
+    ${F.files.length?`<div class="thumbs">${F.files.map((f,i)=>`<div class="thumb"><img src="${f.url}" alt="Foto ${i+1}"><button type="button" data-act="fotoDrop" data-i="${i}" aria-label="Foto ${i+1} entfernen">×</button></div>`).join("")}</div>`:""}
+    <div class="btns"><button class="btn" data-act="fotoRun" ${F.files.length?"":"disabled"}>Ergebnisse erkennen</button>${F.msg?`<span class="bad-text small" role="alert">${esc(F.msg)}</span>`:""}</div>
+    <p class="hint">Tipps: Foto gerade und scharf aufnehmen, die Zeile mit dem Namen sollte gut lesbar sein. Beim ersten Mal fragt Claude, ob das Bahnbuch Fotos senden darf. Die Erkennung nutzt dein Claude-Kontingent.</p>
+  </div>`;
+}
+function fotoReview(){
+  const d=ui.foto.data;
+  const evOpts=cur=>EVENTS.map(([dd,l])=>`<option value="${evKey(dd,l)}" ${evKey(dd,l)===cur?"selected":""}>${evName(dd,l)}</option>`).join("")+(cur&&evOrder(cur)===999?`<option value="${cur}" selected>${evName(+cur.split("-")[0],cur.split("-")[1])}</option>`:"");
+  const stOpts=cur=>[["OK","gewertet"],["DSQ","DSQ"],["DNS","DNS"],["DNF","DNF"]].map(([v,l])=>`<option value="${v}" ${v===cur?"selected":""}>${l}</option>`).join("");
+  const n=d.meets.reduce((s,m)=>s+m.rows.length,0);
+  const unsure=d.meets.reduce((s,m)=>s+m.rows.filter(r=>r.unsicher).length,0);
+  return`${d.hinweis?`<div class="notice"><span>${esc(d.hinweis)}</span></div>`:""}
+  <p>${n} ${n===1?"Ergebnis":"Ergebnisse"} erkannt${unsure?`, davon <b>${unsure} unsicher</b> (gelb markiert)`:""}. Bitte prüfe die Werte mit dem Foto und korrigiere sie, falls nötig.</p>
+  ${d.meets.map((m,i)=>{const ex=findExisting(m);return`<div class="sub"><div class="form">
+      <div class="field wide"><label for="fm${i}n">Wettkampf</label><input id="fm${i}n" value="${esc(m.name)}"></div>
+      <div class="field"><label for="fm${i}d">Datum</label><input id="fm${i}d" type="date" value="${esc(m.datum||"")}"></div>
+      <div class="field"><label for="fm${i}o">Ort</label><input id="fm${i}o" value="${esc(m.ort)}"></div>
+      <div class="field"><label for="fm${i}b">Bahn</label><select id="fm${i}b"><option value="25" ${m.bahn!==50?"selected":""}>Kurzbahn 25 m</option><option value="50" ${m.bahn===50?"selected":""}>Langbahn 50 m</option></select></div>
+    </div>
+    ${ex?`<p class="hint">Am ${fmtDate(m.datum)} gibt es schon „${esc(ex[1].name)}“. Die Ergebnisse werden dort ergänzt, doppelte übersprungen.</p>`:""}
+    ${!m.bahnSicher?`<p class="hint">Bahnlänge war auf dem Foto nicht erkennbar, bitte prüfen.</p>`:""}
+    ${m.rows.map((r,j)=>`<div class="fres ${r.unsicher?"unsure":""}" id="fr${i}-${j}">
+      <label class="check"><input type="checkbox" id="fr${i}-${j}inc" checked> übernehmen${r.unsicher?' <span class="chip">unsicher</span>':""}</label>
+      <div class="form">
+        <div class="field"><label for="fr${i}-${j}ev">Strecke</label><select id="fr${i}-${j}ev">${evOpts(evKey(r.distanz,r.lage))}</select></div>
+        <div class="field"><label for="fr${i}-${j}st">Status</label><select id="fr${i}-${j}st">${stOpts(r.status)}</select></div>
+        <div class="field"><label for="fr${i}-${j}z">Zeit</label><input id="fr${i}-${j}z" class="timein" inputmode="decimal" value="${r.zeit!=null?fmt(r.zeit):""}"></div>
+        <div class="field"><label for="fr${i}-${j}p">Platz</label><input id="fr${i}-${j}p" inputmode="numeric" value="${r.platz||""}"></div>
+        <div class="field"><label for="fr${i}-${j}s">Starter</label><input id="fr${i}-${j}s" inputmode="numeric" value="${r.starter||""}"></div>
+      </div>
+      ${r.splits.length?`<span class="splits">Zwischenzeiten: ${r.splits.map(s=>`${s.d} m ${fmt(s.t)}`).join(" · ")}</span>`:""}
+    </div>`).join("")}
+  </div>`}).join("")}
+  <div class="btns"><button class="btn" data-act="fotoSave">Ausgewählte speichern</button><button class="btn ghost" data-act="fotoReset">Verwerfen</button><span class="bad-text small" id="fErr" role="alert"></span></div>`;
+}
+const findExisting=m=>m.datum?[...meets.entries()].find(([,x])=>x.datum===m.datum):null;
+after.foto=()=>{
+  const inp=$("#fotoFile");if(inp)inp.addEventListener("change",()=>{
+    const F=ui.foto;F.msg="";
+    for(const f of inp.files){if(F.files.length>=imgLimits.maxCount){F.msg=`Höchstens ${imgLimits.maxCount} Fotos auf einmal.`;break}if(f.size>imgLimits.maxInputBytes){F.msg="Ein Foto ist zu groß.";continue}F.files.push({file:f,url:URL.createObjectURL(f)})}
+    render(true)});
+  document.querySelectorAll('.fres input[type=checkbox]').forEach(c=>c.addEventListener("change",()=>c.closest(".fres").classList.toggle("off",!c.checked)));
+};
+function fotoPrompt(){
+  return`Du liest Fotos von Schwimm-Wettkampfergebnissen (Ergebnislisten oder Protokolle, Urkunden, handschriftliche Notizen oder Screenshots).
+Gesucht sind ausschließlich die Ergebnisse von: ${profile.vorname} ${profile.nachname}, Jahrgang ${profile.jahrgang}${profile.verein?", Verein "+profile.verein:""}.
+Enthält ein Foto die Ergebnisse vieler Personen, nimm nur die Zeilen dieser Person. Betrifft ein Foto erkennbar nur diese eine Person (Urkunde, persönliche Liste), nimm alle Einträge darauf.
+
+Für jeden Wettkampf: name, datum (YYYY-MM-DD oder null), ort (Text oder ""), bahn (25 für Kurzbahn, 50 für Langbahn, null wenn nicht erkennbar).
+Für jedes Ergebnis:
+- distanz: Meter als Zahl
+- lage: "FR" (Freistil/Kraul), "RU" (Rücken), "BR" (Brust), "SM" (Schmetterling/Delfin), "LA" (Lagen)
+- zeit: Endzeit als "m:ss,hh", zum Beispiel "0:58,82" oder "1:05,43"; null ohne Zeit
+- status: "OK", "DSQ" (disqualifiziert), "DNS" (nicht angetreten) oder "DNF" (aufgegeben)
+- platz: Zahl oder null
+- starter: Anzahl der Gewerteten in dieser Wertung oder Altersklasse, Zahl oder null
+- zwischenzeiten: Liste von {"distanz":50,"zeit":"0:31,20"} mit den aufsummierten Zeiten, sonst []
+- dsqGrund: Text oder ""
+- unsicher: true, wenn du einen Wert dieses Ergebnisses nicht sicher lesen konntest
+Erfinde nichts. Was nicht auf dem Foto steht, ist null.
+
+Antworte nur mit JSON in genau dieser Form:
+{"person_gefunden":true,"hinweis":"","wettkaempfe":[{"name":"Bezirksmeisterschaften","datum":"2026-03-14","ort":"Ulm","bahn":25,"ergebnisse":[{"distanz":50,"lage":"BR","zeit":"0:58,82","status":"OK","platz":4,"starter":12,"zwischenzeiten":[],"dsqGrund":"","unsicher":false}]}]}
+Kommt die Person auf keinem Foto vor, setze person_gefunden auf false, wettkaempfe auf [] und erkläre es kurz in hinweis.`;
+}
+function normFoto(raw){
+  const meetsIn=Array.isArray(raw&&raw.wettkaempfe)?raw.wettkaempfe:[];
+  const out=[];
+  for(const m of meetsIn){
+    const rows=[];
+    for(const e of (Array.isArray(m.ergebnisse)?m.ergebnisse:[])){
+      const distanz=parseInt(e.distanz,10),lage=String(e.lage||"").toUpperCase();
+      if(!(distanz>0)||!LAGEN[lage])continue;
+      const status=["OK","DSQ","DNS","DNF"].includes(e.status)?e.status:"OK";
+      const zeit=e.zeit!=null?parseTime(String(e.zeit)):null;
+      const splits=(Array.isArray(e.zwischenzeiten)?e.zwischenzeiten:[]).map((s,i)=>({d:parseInt(s&&s.distanz,10)||50*(i+1),t:parseTime(String(s&&s.zeit||""))})).filter(s=>s.t!=null&&s.d<distanz).sort((a,b)=>a.d-b.d);
+      rows.push({distanz,lage,status,zeit,platz:parseInt(e.platz,10)||null,starter:parseInt(e.starter,10)||null,splits,dsqGrund:String(e.dsqGrund||""),unsicher:!!e.unsicher||(status==="OK"&&zeit==null)});
+    }
+    if(!rows.length)continue;
+    const datum=/^\d{4}-\d{2}-\d{2}$/.test(m.datum||"")?m.datum:"";
+    out.push({name:String(m.name||"Wettkampf"),datum,ort:String(m.ort||""),bahn:+m.bahn===50?50:25,bahnSicher:+m.bahn===25||+m.bahn===50,rows});
+  }
+  return{meets:out,hinweis:String(raw&&raw.hinweis||"")};
+}
+const SAMPLE_ERR={not_granted:"Du hast dem Bahnbuch nicht erlaubt, Claude zu nutzen. Das kannst du über das Menü der Seite ändern.",sampling_disabled:"Claude ist für dieses Konto nicht verfügbar.",images_unavailable:"In dieser Ansicht können keine Fotos gesendet werden.",image_rejected:"Ein Foto konnte nicht gelesen werden. Bitte ein anderes Foto (JPEG oder PNG) wählen.",rate_limited:"Gerade zu viele Anfragen oder dein Claude-Kontingent ist aufgebraucht. Bitte später noch einmal versuchen.",session_expired:"Bitte melde dich erneut bei claude.ai an.",refused:"Claude konnte die Fotos nicht auswerten. Versuche ein anderes Foto.",invalid_json:"Die Antwort war unvollständig. Bitte noch einmal versuchen, eventuell mit weniger Fotos.",empty_completion:"Claude hat nichts erkannt. Bitte ein schärferes Foto versuchen."};
+async function fotoRun(){
+  const F=ui.foto;F.state="running";F.msg="";F.ctl=new AbortController();render(true);
+  try{
+    const raw=await sample.json(fotoPrompt(),{images:F.files.map(f=>f.file),signal:F.ctl.signal});
+    const d=normFoto(raw);
+    if(!d.meets.length){F.state="idle";F.msg=d.hinweis||`Auf den Fotos wurden keine Ergebnisse von ${fullName()} gefunden.`}
+    else{F.data=d;F.state="review"}
+  }catch(e){F.state="idle";F.msg=e&&e.code==="cancelled"?"":(e&&SAMPLE_ERR[e.code])||"Die Erkennung hat nicht geklappt. Bitte noch einmal versuchen."}
+  F.ctl=null;formOpen=false;render(true);
+}
+async function fotoSave(btn){
+  const d=ui.foto.data,err=$("#fErr");err.textContent="";
+  const plan=[];
+  for(let i=0;i<d.meets.length;i++){
+    const m=d.meets[i];const meta={name:$(`#fm${i}n`).value.trim()||m.name,datum:$(`#fm${i}d`).value,ort:$(`#fm${i}o`).value.trim(),bahn:+$(`#fm${i}b`).value};
+    const rows=[];
+    for(let j=0;j<m.rows.length;j++){
+      const p=`#fr${i}-${j}`;if(!$(p+"inc").checked)continue;
+      const [dd,l]=$(p+"ev").value.split("-");const status=$(p+"st").value;let zeit=null;
+      if(status==="OK"){zeit=parseTime($(p+"z").value);if(zeit==null){err.textContent=`Bitte die Zeit für ${evName(+dd,l)} prüfen.`;$(p+"z").focus();return}}
+      const r=m.rows[j];const res={id:newId(),distanz:+dd,lage:l,zeit,status,platz:status==="OK"&&+$(p+"p").value||null,starter:+$(p+"s").value||null};
+      if(status==="OK"&&r.splits.length&&r.splits.every(s=>s.t<zeit))res.splits=[...r.splits,{d:+dd,t:zeit}];
+      if(status==="DSQ"&&r.dsqGrund)res.dsqGrund=r.dsqGrund;
+      rows.push(res);
+    }
+    if(!rows.length)continue;
+    if(!meta.datum){err.textContent=`Bitte das Datum für „${meta.name}“ ergänzen.`;$(`#fm${i}d`).focus();return}
+    plan.push({meta,rows});
+  }
+  if(!plan.length){err.textContent="Es ist kein Ergebnis zum Übernehmen ausgewählt.";return}
+  btn.disabled=true;btn.textContent="Wird gespeichert …";
+  try{
+    let added=0,lastId=null;
+    for(const {meta,rows} of plan){
+      const ex=findExisting(meta);const id=ex?ex[0]:newId();
+      const meet=ex?structuredClone(ex[1]):{...meta,zeitmessung:"elektronisch",notiz:"",results:[]};
+      const sig=r=>[r.distanz,r.lage,r.zeit,r.status].join("|");const have=new Set((meet.results||[]).map(sig));
+      for(const r of rows){if(have.has(sig(r)))continue;meet.results.push(r);have.add(sig(r));added++}
+      await putMeet(id,meet);lastId=id;
+    }
+    fotoClear();formOpen=false;toast(`${added} ${added===1?"Ergebnis":"Ergebnisse"} gespeichert`);
+    location.hash=plan.length===1?"wettkampf-"+lastId:"wettkaempfe";
+  }catch(x){btn.disabled=false;btn.textContent="Ausgewählte speichern";writeError(x)}
+}
+function fotoClear(){const F=ui.foto;F.files.forEach(f=>URL.revokeObjectURL(f.url));Object.assign(F,{files:[],state:"idle",msg:"",data:null,ctl:null})}
 
 /* LENEX */
 const STROKE={FREE:"FR",BACK:"RU",BREAST:"BR",FLY:"SM",MEDLEY:"LA"};
@@ -591,6 +751,11 @@ const actions={
   delMeet:async b=>{try{await delMeet(b.dataset.id);toast("Wettkampf gelöscht");location.hash="wettkaempfe"}catch(e){writeError(e)}},
   clearExamples:async b=>{b.disabled=true;try{for(const [id,m] of [...meets])if(m.beispiel)await delMeet(id);if(profile&&profile.beispiel)await delProfile();toast("Beispieldaten entfernt")}catch(e){writeError(e)}},
   doImport:b=>doImport(b),
+  fotoRun:()=>fotoRun(),
+  fotoStop:()=>{ui.foto.ctl&&ui.foto.ctl.abort()},
+  fotoDrop:b=>{const f=ui.foto.files.splice(+b.dataset.i,1)[0];if(f)URL.revokeObjectURL(f.url);ui.foto.msg="";render(true)},
+  fotoReset:()=>{fotoClear();formOpen=false;render(true)},
+  fotoSave:b=>fotoSave(b),
   cancelImport:()=>{ui.imp=null;formOpen=false;render(true)},
   exportCsv,exportJson
 };
@@ -607,6 +772,7 @@ async function boot(){
   render(true);
   if(!window.claude||!window.claude.use){mode="local";render(true);return}
   try{downloads=await window.claude.use("downloads")}catch{}
+  window.claude.use("sample").then(async s=>{sample=s;if(s){const l=await s.limits().catch(()=>null);imgLimits=(l&&l.images)||null}if(route().v==="foto")render()}).catch(()=>{sample=null});
   try{const u=await window.claude.use("user");if(u&&(await u.can("data.write"))===false)canWrite=false}catch{}
   try{db=await window.claude.use("db")}catch{db=null}
   if(!db){mode="local";render(true);return}
