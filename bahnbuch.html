@@ -1,0 +1,622 @@
+<title>Bahnbuch Schwimmarchiv</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-title" content="Bahnbuch">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: persönliches Logbuch einer Schwimmerin/eines Schwimmers. Kopfband mit Leinen-Streifen, Karten als Protokollblätter, auf dem iPhone Tab-Leiste unten */
+:root{
+  --bg:#edf3f5; --surface:#ffffff; --soft:#e1ecf0; --ink:#0f2a35; --muted:#536e79; --line:#d2e0e5;
+  --accent:#0b6f8c; --accent-ink:#ffffff; --rope:#d6452d;
+  --gold:#b98a10; --silver:#7f8e97; --bronze:#a8612c; --ok:#2a7f50; --bad:#bb3b27;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-time:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a1a21; --surface:#10262f; --soft:#16323e; --ink:#e2eef2; --muted:#8eaab4; --line:#22424e;
+  --accent:#52b8d4; --accent-ink:#04212b; --rope:#ef7660;
+  --gold:#e0b84a; --silver:#a9b6bd; --bronze:#d08a55; --ok:#5cc28a; --bad:#ef7a64; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1a21; --surface:#10262f; --soft:#16323e; --ink:#e2eef2; --muted:#8eaab4; --line:#22424e;
+  --accent:#52b8d4; --accent-ink:#04212b; --rope:#ef7660;
+  --gold:#e0b84a; --silver:#a9b6bd; --bronze:#d08a55; --ok:#5cc28a; --bad:#ef7a64; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:1000px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;padding-block:16px 12px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:1.9rem;letter-spacing:.01em;line-height:1;margin:0}
+.brand span{color:var(--accent)}
+.tag{color:var(--muted);font-size:.95rem}
+.rope{height:6px;background:repeating-linear-gradient(90deg,var(--rope) 0 22px,var(--surface) 22px 26px,var(--accent) 26px 48px,var(--surface) 48px 52px)}
+nav.tabs{background:var(--surface);border-bottom:1px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:4px}
+nav.tabs a{flex:none;padding:12px 14px;color:var(--muted);text-decoration:none;font-weight:600;font-size:.95rem;border-bottom:3px solid transparent;display:flex;align-items:center;gap:7px}
+nav.tabs a:hover{color:var(--ink)}
+nav.tabs a[aria-current="page"]{color:var(--accent);border-bottom-color:var(--accent)}
+nav.tabs svg{width:18px;height:18px;flex:none}
+main.wrap{padding-block:22px 64px;display:grid;gap:18px}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:1.9rem}h2{font-size:1.35rem}h3{font-size:1.1rem}
+.eyebrow{font-size:.75rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px;min-width:0;align-content:start}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+p{margin:0}
+a{color:var(--accent)}
+.num{font-variant-numeric:tabular-nums}
+.time{font-family:var(--f-time);font-variant-numeric:tabular-nums;font-size:.95rem;white-space:nowrap}
+.big-time{font-family:var(--f-time);font-size:1.35rem;font-variant-numeric:tabular-nums}
+.strip{display:flex;flex-wrap:wrap;gap:10px 26px}
+.strip b{font-family:var(--f-display);font-size:1.6rem;display:block;line-height:1}
+.tbl{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th{text-align:left;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+.chip{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.04em;padding:1px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted);vertical-align:1px;white-space:nowrap}
+.chip.pb{border-color:var(--ok);color:var(--ok)}
+.chip.bad{border-color:var(--bad);color:var(--bad)}
+.chip.lane{border-color:var(--accent);color:var(--accent)}
+.medal{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 4px;border-radius:99px;font-weight:600;font-size:.82rem;font-variant-numeric:tabular-nums;color:var(--muted);border:1px solid var(--line)}
+.medal.p1{background:var(--gold);border-color:var(--gold);color:var(--surface)}.medal.p2{background:var(--silver);border-color:var(--silver);color:var(--surface)}.medal.p3{background:var(--bronze);border-color:var(--bronze);color:var(--surface)}
+.of{font-size:.78rem;color:var(--muted);margin-left:3px}
+.splits{font-family:var(--f-time);font-size:.75rem;color:var(--muted)}
+.list{display:grid}
+.row{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
+.row:last-child{border-bottom:0}
+.row a{font-weight:600;text-decoration:none}
+.res{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center}
+.res:last-child{border-bottom:0}
+.res .what{font-weight:600}
+.res .right{text-align:right;display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.res .meta{grid-column:1/-1;display:flex;gap:6px 12px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:600;font-size:.95rem;padding:9px 15px;border-radius:9px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+.btn.danger.armed{background:var(--bad);color:var(--surface)}
+.btn.sm{padding:4px 10px;font-size:.82rem}
+.btn:disabled{opacity:.5;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.field{display:grid;gap:4px;min-width:0;align-content:start}
+.field label{font-size:.8rem;font-weight:600;color:var(--muted)}
+.wide{grid-column:1/-1}
+/* 16px verhindert das automatische Hineinzoomen auf dem iPhone */
+input,select,textarea{font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%;min-width:0}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none}
+.timein{font-family:var(--f-time)}
+.sub{border:1px dashed var(--line);border-radius:10px;padding:14px;display:grid;gap:12px}
+.splitgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.notice{border-left:4px solid var(--accent);background:var(--soft);padding:10px 14px;border-radius:0 8px 8px 0;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.notice.warn{border-left-color:var(--rope)}
+.note{background:var(--soft);border-radius:8px;padding:10px 12px;font-size:.93rem}
+.empty{padding:26px 10px;text-align:center;color:var(--muted);display:grid;gap:10px;justify-items:center}
+.hint{font-size:.82rem;color:var(--muted)}
+.ok-text{color:var(--ok)}.bad-text{color:var(--bad)}
+.chart svg{width:100%;height:auto;display:block}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:9px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:30;max-width:calc(100% - 32px)}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;display:grid;gap:10px;justify-items:center}
+.drop.over{border-color:var(--accent);background:var(--soft)}
+ol.steps{margin:0;padding-left:1.3em;display:grid;gap:6px}
+.person{display:flex;align-items:center;gap:14px}
+.avatar{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-display);font-size:1.4rem;font-weight:700;flex:none}
+@media (max-width:720px){
+  .tag{display:none}
+  header.top .wrap{padding-block:12px 10px}
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;border-top:1px solid var(--line);border-bottom:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  nav.tabs .wrap{gap:0}
+  nav.tabs a{flex:1;flex-direction:column;gap:2px;padding:8px 2px 7px;font-size:.7rem;border-bottom:0;border-top:3px solid transparent;text-align:center}
+  nav.tabs a[aria-current="page"]{border-top-color:var(--accent)}
+  nav.tabs svg{width:22px;height:22px}
+  main.wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));gap:14px}
+  .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+  .panel{padding:15px}
+  h1{font-size:1.65rem}
+}
+@media (prefers-reduced-motion:no-preference){.panel{animation:rise .22s ease-out}@keyframes rise{from{transform:translateY(4px)}to{transform:none}}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <p class="brand">Bahn<span>buch</span></p>
+    <span class="tag" id="tagline">Persönliches Wettkampf-Logbuch</span>
+  </div>
+  <div class="rope"></div>
+</header>
+<nav class="tabs" aria-label="Bereiche"><div class="wrap" id="nav"></div></nav>
+<main class="wrap" id="app"><div class="panel"><div class="empty">Logbuch wird geladen …</div></div></main>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+"use strict";
+/* ---------- Stammdaten ---------- */
+const LAGEN={FR:"Freistil",RU:"Rücken",BR:"Brust",SM:"Schmetterling",LA:"Lagen"};
+const EVENTS=[[25,"FR"],[50,"FR"],[100,"FR"],[200,"FR"],[400,"FR"],[800,"FR"],[1500,"FR"],
+  [25,"RU"],[50,"RU"],[100,"RU"],[200,"RU"],[25,"BR"],[50,"BR"],[100,"BR"],[200,"BR"],
+  [25,"SM"],[50,"SM"],[100,"SM"],[200,"SM"],[100,"LA"],[200,"LA"],[400,"LA"]];
+const evKey=(d,l)=>d+"-"+l;
+const evName=(d,l)=>d+" m "+(LAGEN[l]||l);
+const evOrder=k=>{const i=EVENTS.findIndex(([d,l])=>evKey(d,l)===k);return i<0?999:i};
+const GESCHLECHT={w:"weiblich",m:"männlich",d:"divers"};
+const IC={
+  start:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  best:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M10 2h4"/>',
+  meets:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  add:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  data:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>'
+};
+const NAV=[["start","Start","start"],["bestzeiten","Bestzeiten","best"],["wettkaempfe","Wettkämpfe","meets"],["erfassen","Erfassen","add"],["profil","Profil","data"]];
+
+/* ---------- Zustand ---------- */
+let profile=null;const meets=new Map();
+let db=null, downloads=null, mode="loading", canWrite=true, loadNote="";
+const ui={chart:null,editRef:null,erfMeet:"",imp:null};
+
+/* ---------- Hilfen ---------- */
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+function fmt(h){if(h==null)return"–";const m=Math.floor(h/6000),s=Math.floor(h%6000/100),c=h%100;return m?`${m}:${pad(s)},${pad(c)}`:`${s},${pad(c)}`}
+function fmtDiff(h){return(h<0?"−":"+")+fmt(Math.abs(h))}
+/* Zeiteingabe: "1:05,43", "65,43" oder nur Ziffern "10543" (praktisch mit dem iPhone-Ziffernblock) */
+function parseTime(str){
+  const s=String(str).trim().replace(/\s/g,"");if(!s)return null;
+  if(/^\d{3,6}$/.test(s)){const n=s.padStart(6,"0");const min=+n.slice(0,2),sec=+n.slice(2,4),hs=+n.slice(4);if(min>0&&sec>59)return null;return min*6000+sec*100+hs}
+  const m=s.match(/^(?:(\d{1,2})[:.])?(\d{1,2})[,.](\d{1,2})$/);
+  if(!m)return null;const min=+(m[1]||0),sec=+m[2];let hs=m[3];if(hs.length===1)hs+="0";
+  if(m[1]&&sec>59)return null;return min*6000+sec*100+(+hs);
+}
+const fmtDate=d=>{if(!d)return"";const[y,m,t]=d.split("-");return`${t}.${m}.${y}`};
+const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const fullName=()=>profile?`${profile.vorname} ${profile.nachname}`:"";
+const bahnLabel=b=>+b===50?"Langbahn 50 m":"Kurzbahn 25 m";
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
+const sortedMeets=()=>[...meets.entries()].sort((a,b)=>b[1].datum.localeCompare(a[1].datum));
+
+function allResults(){
+  const out=[];
+  for(const [mid,m] of meets) for(const r of (m.results||[])) out.push({...r,meetId:mid,datum:m.datum,bahn:+m.bahn,meetName:m.name});
+  return out;
+}
+/* Bestzeit-Verbesserungen: je Strecke und Bahnlänge in zeitlicher Reihenfolge */
+function analyse(){
+  const res=allResults().filter(r=>r.status==="OK"&&r.zeit!=null).sort((a,b)=>a.datum.localeCompare(b.datum)||a.zeit-b.zeit);
+  const best=new Map(),pb=new Map(),first=new Set();
+  for(const r of res){const k=[r.distanz,r.lage,r.bahn].join("|");const prev=best.get(k);
+    if(prev==null){first.add(r.id);best.set(k,r)}
+    else if(r.zeit<prev.zeit){pb.set(r.id,r.zeit-prev.zeit);best.set(k,r)}}
+  return{pb,first,best};
+}
+function medal(r){if(r.status!=="OK"||!r.platz)return"";return`<span class="medal ${r.platz<=3?"p"+r.platz:""}">${r.platz}.</span>${r.starter?`<span class="of">von ${r.starter}</span>`:""}`}
+function timeCell(r){
+  if(r.status==="OK")return`<span class="time">${fmt(r.zeit)}</span>`;
+  return`<span class="chip bad">${esc(r.status)}</span>`;
+}
+function badges(r,a){return a.pb.has(r.id)?`<span class="chip pb">PB ${fmtDiff(a.pb.get(r.id))}</span>`:a.first.has(r.id)?`<span class="chip">erste Zeit</span>`:""}
+function splitsText(r){
+  if(!r.splits||r.splits.length<2)return"";
+  return r.splits.map((s,i)=>{const lap=s.t-(i?r.splits[i-1].t:0);return`${s.d} m ${fmt(s.t)} (${fmt(lap)})`}).join(" · ");
+}
+
+/* ---------- Speichern ---------- */
+async function putMeet(id,data){if(db)await db.collection("meets").doc(id).set(data);else{meets.set(id,data);render(true)}}
+async function delMeet(id){if(db)await db.collection("meets").doc(id).delete();else{meets.delete(id);render(true)}}
+async function putProfile(data){if(db)await db.doc("profile/main").set(data);else{profile=data;render(true)}}
+async function delProfile(){if(db)await db.doc("profile/main").delete();else{profile=null;render(true)}}
+function writeError(e){
+  toast(e&&e.code==="quota_exceeded"?"Speicher voll: bitte alte Einträge löschen.":e&&e.code==="invalid_argument"?"Speichern nicht erlaubt: dir fehlt das Bearbeitungsrecht.":"Speichern hat nicht geklappt. Bitte erneut versuchen.");
+}
+
+/* ---------- Routing ---------- */
+function route(){const h=location.hash.slice(1)||"start";const i=h.indexOf("-");return i<0?{v:h,id:null}:{v:h.slice(0,i),id:h.slice(i+1)}}
+window.addEventListener("hashchange",()=>{render(true);window.scrollTo(0,0)});
+function renderNav(){
+  const r=route().v;const cur=r==="wettkampf"?"wettkaempfe":r;
+  $("#nav").innerHTML=NAV.filter(([k])=>canWrite||k!=="erfassen").map(([k,l,i])=>`<a href="#${k}" ${k===cur?'aria-current="page"':""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[i]}</svg><span>${l}</span></a>`).join("");
+  $("#tagline").textContent=profile?`Wettkampf-Logbuch von ${fullName()}`:"Persönliches Wettkampf-Logbuch";
+}
+let formOpen=false;
+function render(force){
+  renderNav();
+  const {v,id}=route();
+  if(!force&&formOpen&&(v==="erfassen"||v==="profil"||v==="wettkampf"||v==="start"))return; // nicht unter dem Tippen neu aufbauen
+  formOpen=false;
+  const views={start:vStart,bestzeiten:vBest,wettkaempfe:vMeets,wettkampf:vMeet,erfassen:vErfassen,profil:vProfil};
+  const fn=views[v]||vStart;
+  $("#app").innerHTML=banner()+(mode==="loading"?`<div class="panel"><div class="empty">Logbuch wird geladen …</div></div>`:fn(id));
+  if(mode!=="loading"&&after[v])after[v](id);
+}
+function banner(){
+  let h="";
+  if(mode==="local")h+=`<div class="notice warn"><span>Speichern ist in dieser Ansicht nicht verfügbar. Öffne das Bahnbuch angemeldet in claude.ai, damit Einträge erhalten bleiben.</span></div>`;
+  if(loadNote)h+=`<div class="notice warn"><span>${esc(loadNote)}</span></div>`;
+  if(!canWrite)h+=`<div class="notice"><span>Du hast Lesezugriff auf dieses Logbuch.</span></div>`;
+  const ex=(profile&&profile.beispiel)||[...meets.values()].some(m=>m.beispiel);
+  if(ex&&canWrite&&route().v==="start")h+=`<div class="notice"><span>Das Logbuch zeigt <b>Beispieldaten</b>. Entferne sie, um die Person einzutragen, die du begleitest.</span><button class="btn sm danger" data-arm="clearExamples">Beispieldaten entfernen</button></div>`;
+  return h;
+}
+const after={};
+
+/* ---------- Profilformular (Ersteinrichtung und Bearbeiten) ---------- */
+function profileForm(p){
+  p=p||{};const y=new Date().getFullYear();
+  return`<form id="profForm" class="form" novalidate>
+    <div class="field"><label for="pVor">Vorname</label><input id="pVor" value="${esc(p.vorname)}" autocomplete="given-name"></div>
+    <div class="field"><label for="pNach">Nachname</label><input id="pNach" value="${esc(p.nachname)}" autocomplete="family-name"></div>
+    <div class="field"><label for="pJg">Jahrgang</label><input id="pJg" inputmode="numeric" value="${esc(p.jahrgang)}" placeholder="${y-12}"></div>
+    <div class="field"><label for="pG">Geschlecht</label><select id="pG">${Object.entries(GESCHLECHT).map(([k,l])=>`<option value="${k}" ${p.geschlecht===k?"selected":""}>${l}</option>`).join("")}</select></div>
+    <div class="field wide"><label for="pVerein">Verein</label><input id="pVerein" value="${esc(p.verein)}" placeholder="z. B. SV Musterstadt"></div>
+    <div class="btns wide"><button class="btn" type="submit">${profile?"Profil speichern":"Logbuch anlegen"}</button><span class="bad-text small" id="pErr" role="alert"></span></div>
+  </form>`;
+}
+function wireProfileForm(){
+  const f=$("#profForm");if(!f)return;
+  f.addEventListener("input",()=>{formOpen=true});
+  f.addEventListener("submit",async e=>{e.preventDefault();
+    const d={vorname:$("#pVor").value.trim(),nachname:$("#pNach").value.trim(),jahrgang:+$("#pJg").value,geschlecht:$("#pG").value,verein:$("#pVerein").value.trim()};
+    if(!d.vorname||!d.nachname||!(d.jahrgang>1920&&d.jahrgang<=new Date().getFullYear())){$("#pErr").textContent="Bitte Vorname, Nachname und einen gültigen Jahrgang angeben.";return}
+    try{await putProfile(d);toast("Profil gespeichert");formOpen=false;render(true)}catch(x){writeError(x)}});
+}
+
+/* ---------- Ansicht: Start ---------- */
+function vStart(){
+  if(!profile)return canWrite?`<div class="panel"><div><div class="eyebrow">Einrichtung</div><h1>Wen dokumentierst du?</h1></div>
+    <p class="muted" style="max-width:60ch">Das Bahnbuch begleitet eine Person über alle Wettkämpfe hinweg. Trage zuerst ein paar Angaben ein, danach kannst du Ergebnisse erfassen oder eine LENEX-Datei importieren.</p>${profileForm()}</div>`
+    :`<div class="panel"><div class="empty">Dieses Logbuch ist noch nicht eingerichtet.</div></div>`;
+  const a=analyse(),all=allResults(),ms=sortedMeets();
+  const age=new Date().getFullYear()-profile.jahrgang;
+  const medals=[1,2,3].map(p=>all.filter(r=>r.platz===p&&r.status==="OK").length);
+  const last=ms[0];
+  const recentIds=ms.slice(0,2).map(([id])=>id);
+  const newPbs=all.filter(r=>recentIds.includes(r.meetId)&&a.pb.has(r.id)).sort((x,y)=>a.pb.get(x.id)-a.pb.get(y.id));
+  const initials=(profile.vorname[0]||"")+(profile.nachname[0]||"");
+  return`<div class="panel">
+    <div class="head"><div class="person"><div class="avatar">${esc(initials)}</div><div><h1>${esc(fullName())}</h1><div class="muted">Jahrgang ${profile.jahrgang} · AK ${age}${profile.verein?" · "+esc(profile.verein):""}</div></div></div>
+    ${canWrite?`<a class="btn" href="#erfassen">Ergebnis erfassen</a>`:""}</div>
+    <div class="strip num">
+      <div><b>${meets.size}</b><span class="muted small">Wettkämpfe</span></div>
+      <div><b>${all.length}</b><span class="muted small">Starts</span></div>
+      <div><b>${a.pb.size}</b><span class="muted small">Bestzeiten verbessert</span></div>
+      <div><b><span style="color:var(--gold)">${medals[0]}</span> · <span style="color:var(--silver)">${medals[1]}</span> · <span style="color:var(--bronze)">${medals[2]}</span></b><span class="muted small">Gold · Silber · Bronze</span></div>
+    </div>
+  </div>
+  ${last?`<div class="panel"><div><div class="eyebrow">Letzter Wettkampf</div><h2><a href="#wettkampf-${last[0]}" style="text-decoration:none">${esc(last[1].name)}</a></h2><div class="muted small">${fmtDate(last[1].datum)} · ${esc(last[1].ort)} · ${bahnLabel(last[1].bahn)}</div></div>
+    ${resultList(last[0],last[1],a,false)}</div>`:`<div class="panel"><div class="empty">Noch keine Wettkämpfe erfasst.${canWrite?`<span class="btns"><a class="btn" href="#erfassen">Ergebnis erfassen</a><a class="btn ghost" href="#profil">LENEX importieren</a></span>`:""}</div></div>`}
+  ${newPbs.length?`<div class="panel"><h2>Neue Bestzeiten</h2><p class="hint">Aus den letzten zwei Wettkämpfen, größte Verbesserung zuerst.</p><div class="list">
+    ${newPbs.map(r=>`<div class="row"><span>${evName(r.distanz,r.lage)} <span class="muted small">· ${r.bahn} m · ${fmtDate(r.datum)}</span></span><span><span class="time">${fmt(r.zeit)}</span> <span class="chip pb">${fmtDiff(a.pb.get(r.id))}</span></span></div>`).join("")}</div></div>`:""}`;
+}
+after.start=wireProfileForm;
+
+/* Ergebnisliste eines Wettkampfs */
+function resultList(mid,m,a,actions){
+  const rs=[...(m.results||[])].sort((x,y)=>evOrder(evKey(x.distanz,x.lage))-evOrder(evKey(y.distanz,y.lage)));
+  if(!rs.length)return`<div class="empty small">Für diesen Wettkampf sind noch keine Ergebnisse erfasst.</div>`;
+  return`<div class="list">${rs.map(r=>`<div class="res">
+    <div class="what">${evName(r.distanz,r.lage)}</div>
+    <div class="right">${medal(r)} <span class="big-time">${r.status==="OK"?fmt(r.zeit):`<span class="chip bad">${esc(r.status)}</span>`}</span></div>
+    <div class="meta">${badges(r,a)}${r.dsqGrund?`<span class="hint">${esc(r.dsqGrund)}</span>`:""}${splitsText(r)?`<span class="splits">${splitsText(r)}</span>`:""}
+    ${actions&&canWrite?`<span class="btns" style="margin-left:auto"><button class="btn sm ghost" data-act="editRes" data-meet="${mid}" data-id="${esc(r.id)}">Ändern</button><button class="btn sm danger" data-arm="delRes" data-meet="${mid}" data-id="${esc(r.id)}">Löschen</button></span>`:""}</div>
+  </div>`).join("")}</div>`;
+}
+
+/* ---------- Ansicht: Bestzeiten ---------- */
+function vBest(){
+  const a=analyse(),all=allResults();
+  const keys=[...new Set(all.map(r=>evKey(r.distanz,r.lage)))].sort((x,y)=>evOrder(x)-evOrder(y));
+  if(!keys.length)return`<div class="panel"><div class="empty">Noch keine Zeiten erfasst.</div></div>`;
+  const bestOf=(k,b)=>a.best.get(k.replace("-","|")+"|"+b);
+  const series=[...new Set(all.filter(r=>r.status==="OK").map(r=>evKey(r.distanz,r.lage)+"|"+r.bahn))];
+  if(!ui.chart||!series.includes(ui.chart)){const cnt=s=>all.filter(r=>evKey(r.distanz,r.lage)+"|"+r.bahn===s).length;ui.chart=[...series].sort((x,y)=>cnt(y)-cnt(x))[0]||null}
+  const cell=(k,b)=>{const r=bestOf(k,b);const on=ui.chart===k+"|"+b;return r?`<td data-series="${k}|${b}" style="cursor:pointer;${on?"background:var(--soft)":""}"><span class="time">${fmt(r.zeit)}</span><div class="hint">${fmtDate(r.datum)}</div></td>`:`<td><span class="muted">–</span></td>`};
+  return`<div class="panel"><div><div class="eyebrow">${esc(fullName())}</div><h1>Persönliche Bestzeiten</h1></div>
+    <div class="tbl"><table><thead><tr><th>Strecke</th><th>Kurzbahn 25 m</th><th>Langbahn 50 m</th></tr></thead><tbody>
+    ${keys.map(k=>{const [d,l]=k.split("-");return`<tr><td>${evName(+d,l)}</td>${cell(k,25)}${cell(k,50)}</tr>`}).join("")}</tbody></table></div>
+    <p class="hint">Tippe auf eine Zeit, um ihre Entwicklung zu sehen.</p></div>
+  ${ui.chart?`<div class="panel chart"><div class="head"><h2>Entwicklung</h2><div class="field" style="min-width:210px"><label for="chartSel">Strecke</label><select id="chartSel">${series.sort((x,y)=>evOrder(x.split("|")[0])-evOrder(y.split("|")[0])||x.localeCompare(y)).map(s=>{const [ek,b]=s.split("|");const [d,l]=ek.split("-");return`<option value="${s}" ${s===ui.chart?"selected":""}>${evName(+d,l)} · ${b} m</option>`}).join("")}</select></div></div>
+    <div id="chart"></div><div id="chartList"></div></div>`:""}`;
+}
+after.bestzeiten=()=>{
+  const sel=$("#chartSel");if(!sel)return;
+  sel.onchange=()=>{ui.chart=sel.value;render(true)};
+  document.querySelectorAll("[data-series]").forEach(td=>td.onclick=()=>{ui.chart=td.dataset.series;render(true);$("#chart").scrollIntoView({behavior:"smooth",block:"center"})});
+  const [ek,b]=ui.chart.split("|");const a=analyse();
+  const pts=allResults().filter(r=>evKey(r.distanz,r.lage)===ek&&r.bahn===+b&&r.status==="OK").sort((x,y)=>x.datum.localeCompare(y.datum));
+  drawChart(pts);
+  $("#chartList").innerHTML=`<div class="tbl"><table><thead><tr><th>Datum</th><th>Wettkampf</th><th class="r">Zeit</th></tr></thead><tbody>${[...pts].reverse().map(r=>`<tr><td class="num">${fmtDate(r.datum)}</td><td><a href="#wettkampf-${r.meetId}">${esc(r.meetName)}</a></td><td class="r">${timeCell(r)} ${a.pb.has(r.id)?`<span class="chip pb">PB</span>`:""}</td></tr>`).join("")}</tbody></table></div>`;
+};
+function drawChart(pts){
+  const W=640,H=230,L=62,R=24,T=22,B=34;
+  const ts=pts.map(p=>Date.parse(p.datum));let t0=Math.min(...ts),t1=Math.max(...ts);if(t0===t1){t0-=864e5*30;t1+=864e5*30}
+  let lo=Math.min(...pts.map(p=>p.zeit)),hi=Math.max(...pts.map(p=>p.zeit));const span=Math.max(hi-lo,100);lo-=span*.18;hi+=span*.15;
+  const x=t=>L+(t-t0)/(t1-t0)*(W-L-R), y=z=>T+(z-lo)/(hi-lo)*(H-T-B);
+  const step=[10,20,50,100,200,500,1000,2000,5000].find(s=>(hi-lo)/s<=5)||10000;
+  let grid="";for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)grid+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="12" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${fmt(v)}</text>`;
+  const idx=pts.length<=5?pts.map((_,i)=>i):[0,Math.floor(pts.length/2),pts.length-1];
+  const xl=idx.map(i=>`<text x="${x(ts[i])}" y="${H-10}" text-anchor="${pts.length>1&&i===0?"start":pts.length>1&&i===pts.length-1?"end":"middle"}" font-size="12" fill="var(--muted)">${fmtDate(pts[i].datum).slice(0,6)}${pts[i].datum.slice(2,4)}</text>`).join("");
+  const line=pts.map((p,i)=>(i?"L":"M")+x(ts[i]).toFixed(1)+" "+y(p.zeit).toFixed(1)).join(" ");
+  const bestZ=Math.min(...pts.map(p=>p.zeit));const bi=pts.findIndex(p=>p.zeit===bestZ);
+  const dots=pts.map((p,i)=>`<circle cx="${x(ts[i])}" cy="${y(p.zeit)}" r="${i===bi?6:4}" fill="${i===bi?"var(--rope)":"var(--accent)"}" stroke="var(--surface)" stroke-width="2"><title>${fmtDate(p.datum)} · ${fmt(p.zeit)} · ${esc(p.meetName)}</title></circle>`).join("");
+  const bx=Math.max(L+30,Math.min(x(ts[bi]),W-R-30));
+  $("#chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Zeitverlauf, schnellere Zeiten oben">${grid}<path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${dots}<text x="${bx}" y="${y(bestZ)-12}" text-anchor="middle" font-size="13" font-weight="600" fill="var(--rope)" font-family="IBM Plex Mono, monospace">${fmt(bestZ)}</text>${xl}</svg><p class="hint">Schnellere Zeiten liegen oben, der rote Punkt ist die Bestzeit.</p>`;
+}
+
+/* ---------- Ansicht: Wettkämpfe ---------- */
+function vMeets(){
+  const ms=sortedMeets();const a=analyse();
+  const byYear={};for(const e of ms){const y=e[1].datum.slice(0,4);(byYear[y]=byYear[y]||[]).push(e)}
+  return`<div class="panel"><div class="head"><div><div class="eyebrow">${esc(fullName())}</div><h1>Wettkämpfe</h1></div>${canWrite&&profile?`<a class="btn" href="#erfassen">Neuer Eintrag</a>`:""}</div>
+  ${ms.length?Object.keys(byYear).sort().reverse().map(y=>`<div><h2>${y}</h2><div class="list">
+    ${byYear[y].map(([id,m])=>{const rs=m.results||[];const pbs=rs.filter(r=>a.pb.has(r.id)).length;const med=rs.filter(r=>r.status==="OK"&&r.platz&&r.platz<=3).length;
+      return`<div class="row"><span><a href="#wettkampf-${id}">${esc(m.name)}</a><br><span class="muted small">${fmtDate(m.datum)} · ${esc(m.ort)} · ${rs.length} ${rs.length===1?"Start":"Starts"}</span></span>
+      <span class="btns">${pbs?`<span class="chip pb">${pbs} PB</span>`:""}${med?`<span class="chip">${med}× Podest</span>`:""}<span class="chip lane">${+m.bahn} m</span></span></div>`}).join("")}
+  </div></div>`).join(""):`<div class="empty">Noch keine Wettkämpfe erfasst.</div>`}</div>`;
+}
+function vMeet(id){
+  const m=meets.get(id);if(!m)return`<div class="panel"><div class="empty">Dieser Wettkampf ist nicht (mehr) im Logbuch. <a href="#wettkaempfe">Zur Liste</a></div></div>`;
+  const a=analyse();
+  return`<div class="panel">
+    <div><div class="eyebrow"><a href="#wettkaempfe">Wettkämpfe</a> / ${m.datum.slice(0,4)}</div><h1>${esc(m.name)}</h1>
+      <div class="muted">${fmtDate(m.datum)} · ${esc(m.ort)}</div>
+      <div class="btns" style="margin-top:6px"><span class="chip lane">${bahnLabel(m.bahn)}</span><span class="chip">${m.zeitmessung==="hand"?"Handzeit":"elektronische Zeitmessung"}</span>${m.beispiel?'<span class="chip">Beispiel</span>':""}</div></div>
+    ${m.notiz?`<div class="note">${esc(m.notiz)}</div>`:""}
+    ${resultList(id,m,a,true)}
+    ${canWrite?`<div class="btns"><button class="btn ghost" data-act="addToMeet" data-id="${id}">Ergebnis hinzufügen</button><button class="btn ghost" data-act="editMeet" data-id="${id}">Notiz &amp; Angaben ändern</button><button class="btn danger" data-arm="delMeet" data-id="${id}">Wettkampf löschen</button></div>
+    <form id="meetEdit" class="sub" hidden novalidate><h3>Wettkampf bearbeiten</h3><div class="form">
+      <div class="field"><label for="meName">Name</label><input id="meName" value="${esc(m.name)}"></div>
+      <div class="field"><label for="meDatum">Datum</label><input id="meDatum" type="date" value="${esc(m.datum)}"></div>
+      <div class="field"><label for="meOrt">Ort</label><input id="meOrt" value="${esc(m.ort)}"></div>
+      <div class="field"><label for="meBahn">Bahn</label><select id="meBahn"><option value="25" ${+m.bahn===25?"selected":""}>Kurzbahn 25 m</option><option value="50" ${+m.bahn===50?"selected":""}>Langbahn 50 m</option></select></div>
+      <div class="field wide"><label for="meNotiz">Notiz</label><textarea id="meNotiz" placeholder="Wie lief es? Technik, Gefühl, Trainerhinweise …">${esc(m.notiz)}</textarea></div>
+      <div class="btns wide"><button class="btn" type="submit">Speichern</button></div></div></form>`:""}
+    <p class="hint"><span class="chip pb">PB</span> Bestzeit auf dieser Bahnlänge verbessert · Zahlen in Klammern sind die Teilzeiten je Abschnitt</p>
+  </div>`;
+}
+after.wettkampf=id=>{
+  const f=$("#meetEdit");if(!f)return;
+  f.addEventListener("submit",async e=>{e.preventDefault();const m=structuredClone(meets.get(id));
+    Object.assign(m,{name:$("#meName").value.trim()||m.name,datum:$("#meDatum").value||m.datum,ort:$("#meOrt").value.trim(),bahn:+$("#meBahn").value,notiz:$("#meNotiz").value.trim()});
+    try{await putMeet(id,m);formOpen=false;toast("Wettkampf gespeichert");render(true)}catch(x){writeError(x)}});
+};
+
+/* ---------- Ansicht: Erfassen ---------- */
+function vErfassen(){
+  if(!canWrite)return`<div class="panel"><div class="empty">Zum Erfassen fehlt dir das Bearbeitungsrecht.</div></div>`;
+  if(!profile)return`<div class="panel"><div class="empty">Lege zuerst das Profil an.<a class="btn" href="#start">Zur Einrichtung</a></div></div>`;
+  formOpen=true;
+  let r=null,meetId=ui.erfMeet;
+  if(ui.editRef){const m=meets.get(ui.editRef.meet);r=m&&(m.results||[]).find(x=>x.id===ui.editRef.id);if(r)meetId=ui.editRef.meet;else ui.editRef=null}
+  const ms=sortedMeets();if(!meetId||(!meets.has(meetId)&&meetId!=="__new"))meetId=ms.length?ms[0][0]:"__new";
+  const ek=r?evKey(r.distanz,r.lage):(ui.lastEv||"100-FR");
+  return`<form class="panel" id="erf" novalidate>
+    <div><div class="eyebrow">${esc(fullName())}</div><h1>${r?"Ergebnis ändern":"Ergebnis erfassen"}</h1></div>
+    <div class="form">
+      <div class="field wide"><label for="eMeet">Wettkampf</label><select id="eMeet" ${r?"disabled":""}>${ms.map(([id,m])=>`<option value="${id}" ${id===meetId?"selected":""}>${fmtDate(m.datum)} · ${esc(m.name)}</option>`).join("")}<option value="__new" ${meetId==="__new"?"selected":""}>+ Neuen Wettkampf anlegen</option></select></div>
+    </div>
+    <div class="sub" id="newMeet" hidden><h3>Neuer Wettkampf</h3><div class="form">
+      <div class="field wide"><label for="mName">Name</label><input id="mName" placeholder="z. B. Kreismeisterschaften"></div>
+      <div class="field"><label for="mDatum">Datum</label><input id="mDatum" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label for="mOrt">Ort</label><input id="mOrt" placeholder="Stadt oder Bad"></div>
+      <div class="field"><label for="mBahn">Bahn</label><select id="mBahn"><option value="25">Kurzbahn 25 m</option><option value="50">Langbahn 50 m</option></select></div>
+      <div class="field"><label for="mZeit">Zeitmessung</label><select id="mZeit"><option value="elektronisch">elektronisch</option><option value="hand">Handzeit</option></select></div>
+    </div></div>
+    <div class="form">
+      <div class="field"><label for="eEv">Strecke</label><select id="eEv">${EVENTS.map(([d,l])=>`<option value="${evKey(d,l)}" ${evKey(d,l)===ek?"selected":""}>${evName(d,l)}</option>`).join("")}</select></div>
+      <div class="field"><label for="eStatus">Status</label><select id="eStatus">${[["OK","gewertet"],["DSQ","disqualifiziert (DSQ)"],["DNS","nicht angetreten (DNS)"],["DNF","nicht beendet (DNF)"]].map(([v,l])=>`<option value="${v}" ${r&&r.status===v?"selected":""}>${l}</option>`).join("")}</select></div>
+      <div class="field" id="zeitBox"><label for="eZeit">Endzeit</label><input id="eZeit" class="timein" inputmode="decimal" placeholder="1:05,43 oder 10543" value="${r&&r.zeit!=null?fmt(r.zeit):""}" autocomplete="off"><span class="hint" id="eZeitHint"></span></div>
+      <div class="field"><label for="ePlatz">Platz</label><input id="ePlatz" inputmode="numeric" placeholder="z. B. 3" value="${r&&r.platz?r.platz:""}"></div>
+      <div class="field"><label for="eStarter">Starter in der Wertung</label><input id="eStarter" inputmode="numeric" placeholder="optional" value="${r&&r.starter?r.starter:""}"></div>
+      <div class="field wide" id="dsqBox" hidden><label for="eDsq">Grund der Disqualifikation</label><input id="eDsq" placeholder="z. B. Frühstart" value="${esc(r&&r.dsqGrund||"")}"></div>
+    </div>
+    <div id="splitBox"></div>
+    <div class="btns"><button class="btn" type="submit">${r?"Änderung speichern":"Ergebnis speichern"}</button>${r?`<button class="btn ghost" type="button" data-act="cancelEdit">Abbrechen</button>`:""}<span class="bad-text small" id="eErr" role="alert"></span></div>
+    ${r?"":`<p class="hint">Tipp fürs iPhone: Zeiten kannst du auch nur mit Ziffern eingeben, zum Beispiel 10543 für 1:05,43.</p>`}
+  </form>`;
+}
+function splitFields(distanz,existing){
+  if(distanz<100)return"";
+  if(distanz>400)return`<div class="field"><label for="eSplitsTxt">Zwischenzeiten alle 50 m (optional, mit Leerzeichen getrennt)</label><input id="eSplitsTxt" class="timein" value="${existing?existing.filter(s=>s.d<distanz).map(s=>fmt(s.t)).join(" "):""}"></div>`;
+  const marks=[];for(let d=50;d<distanz;d+=50)marks.push(d);
+  return`<div class="field"><label>Zwischenzeiten (optional)</label><div class="splitgrid">${marks.map(d=>{const v=existing&&existing.find(s=>s.d===d);return`<div class="field"><label for="sp${d}">${d} m</label><input id="sp${d}" class="timein split" data-d="${d}" inputmode="decimal" placeholder="—" value="${v?fmt(v.t):""}"></div>`}).join("")}</div></div>`;
+}
+after.erfassen=()=>{
+  const f=$("#erf");if(!f)return;
+  const em=ui.editRef&&meets.get(ui.editRef.meet);const editR=em&&(em.results||[]).find(x=>x.id===ui.editRef.id);
+  const drawSplits=()=>{$("#splitBox").innerHTML=$("#eStatus").value==="OK"?splitFields(+$("#eEv").value.split("-")[0],editR&&evKey(editR.distanz,editR.lage)===$("#eEv").value&&editR.splits):""};
+  const sync=()=>{$("#newMeet").hidden=$("#eMeet").value!=="__new";const ok=$("#eStatus").value==="OK";$("#dsqBox").hidden=$("#eStatus").value!=="DSQ";$("#zeitBox").hidden=!ok;
+    const z=$("#eZeit").value.trim(),h=$("#eZeitHint");if(!z){h.textContent="Format m:ss,hh";h.className="hint"}else{const p=parseTime(z);h.textContent=p==null?"Zeit nicht lesbar":"= "+fmt(p);h.className=p==null?"hint bad-text":"hint ok-text"}};
+  $("#eMeet").addEventListener("change",sync);$("#eStatus").addEventListener("change",()=>{sync();drawSplits()});$("#eEv").addEventListener("change",drawSplits);$("#eZeit").addEventListener("input",sync);
+  sync();drawSplits();
+  f.addEventListener("submit",async e=>{e.preventDefault();const err=$("#eErr");err.textContent="";
+    try{
+      const status=$("#eStatus").value;let zeit=null;
+      if(status==="OK"){zeit=parseTime($("#eZeit").value);if(zeit==null)throw"Bitte eine gültige Endzeit eingeben, z. B. 1:05,43 oder 10543."}
+      const [d,l]=$("#eEv").value.split("-");const distanz=+d;
+      let splits=[];
+      if(status==="OK"){
+        const txt=$("#eSplitsTxt");
+        if(txt){const parts=txt.value.trim().split(/[;\s]+/).filter(Boolean).map(parseTime);if(parts.some(p=>p==null))throw"Eine Zwischenzeit ist nicht lesbar.";splits=parts.map((t,i)=>({d:50*(i+1),t}))}
+        else for(const inp of document.querySelectorAll(".split")){if(!inp.value.trim())continue;const t=parseTime(inp.value);if(t==null)throw`Die Zwischenzeit bei ${inp.dataset.d} m ist nicht lesbar.`;splits.push({d:+inp.dataset.d,t})}
+        if(splits.some((s,i)=>(i&&s.t<=splits[i-1].t)||s.t>=zeit))throw"Zwischenzeiten müssen aufsteigend und kleiner als die Endzeit sein.";
+        if(splits.length)splits.push({d:distanz,t:zeit});
+      }
+      let meetId=ui.editRef?ui.editRef.meet:$("#eMeet").value,meet;
+      if(meetId==="__new"){const name=$("#mName").value.trim(),datum=$("#mDatum").value;if(!name||!datum)throw"Bitte Name und Datum des Wettkampfs angeben.";
+        meetId=newId();meet={name,datum,ort:$("#mOrt").value.trim(),bahn:+$("#mBahn").value,zeitmessung:$("#mZeit").value,notiz:"",results:[]}}
+      else meet=structuredClone(meets.get(meetId));
+      const res={id:ui.editRef?ui.editRef.id:newId(),distanz,lage:l,zeit,status,platz:status==="OK"&&+$("#ePlatz").value||null,starter:+$("#eStarter").value||null};
+      if(splits.length>1)res.splits=splits;if(status==="DSQ"&&$("#eDsq").value.trim())res.dsqGrund=$("#eDsq").value.trim();
+      meet.results=(meet.results||[]).filter(x=>x.id!==res.id).concat(res);
+      await putMeet(meetId,meet);
+      ui.erfMeet=meetId;ui.lastEv=$("#eEv").value;
+      if(ui.editRef){ui.editRef=null;formOpen=false;toast("Änderung gespeichert");location.hash="wettkampf-"+meetId;return}
+      toast(`${evName(distanz,l)} gespeichert`);formOpen=false;render(true);
+    }catch(x){if(typeof x==="string")err.textContent=x;else writeError(x)}
+  });
+};
+
+/* ---------- Ansicht: Profil & Daten ---------- */
+function vProfil(){
+  const p=ui.imp;
+  return`${profile&&canWrite?`<div class="panel"><div><div class="eyebrow">Profil</div><h1>${esc(fullName())}</h1></div>${profileForm(profile)}</div>`:""}
+  ${canWrite&&profile?`<div class="panel"><div><div class="eyebrow">Import</div><h2>LENEX-Ergebnisdatei übernehmen</h2></div>
+    <p class="muted" style="max-width:65ch">Ergebnisdateien aus EasyWk, SPLASH Meet Manager oder von der Veranstalter-Website (.lxf oder .lef). Das Bahnbuch sucht ${esc(profile.vorname)} in der Datei und übernimmt nur diese Ergebnisse, mit Platz und Zwischenzeiten.</p>
+    <label class="drop" id="drop" for="lenexFile"><b>Datei auswählen</b><span class="hint">Auf dem iPhone aus der Dateien-App, zum Beispiel aus „Downloads“</span><input id="lenexFile" type="file" accept=".lxf,.lef,.xml,.zip" style="max-width:260px"></label>
+    ${p?`<div class="sub"><h3>${esc(p.meet.name)}</h3><div class="muted small">${fmtDate(p.meet.datum)} · ${esc(p.meet.ort)} · ${bahnLabel(p.meet.bahn)} · ${p.athletes.length} Aktive in der Datei</div>
+      <div class="field"><label for="impAth">Person in der Datei</label><select id="impAth">${p.athletes.map((a,i)=>`<option value="${i}" ${i===p.sel?"selected":""}>${esc(a.nachname)}, ${esc(a.vorname)} (${a.jahrgang}) · ${esc(a.verein)}</option>`).join("")}</select></div>
+      <div id="impPrev"></div>
+      <div class="btns"><button class="btn" type="button" data-act="doImport">Ergebnisse übernehmen</button><button class="btn ghost" type="button" data-act="cancelImport">Verwerfen</button></div></div>`:""}
+    <span class="bad-text small" id="impErr" role="alert"></span></div>`:""}
+  <div class="panel"><div><div class="eyebrow">Sichern</div><h2>Export &amp; Sicherung</h2></div>
+    <p class="muted">CSV für Excel oder Numbers, JSON als vollständige Sicherung, die du hier wieder einspielen kannst.</p>
+    <div class="btns"><button class="btn ghost" data-act="exportCsv">Ergebnisse als CSV</button><button class="btn ghost" data-act="exportJson">Sicherung als JSON</button>
+    ${canWrite?`<label class="btn ghost" for="restoreFile">Sicherung einspielen</label><input id="restoreFile" type="file" accept=".json,application/json" hidden>`:""}</div>
+    <span class="hint" id="expMsg"></span></div>
+  <div class="panel"><div><div class="eyebrow">iPhone</div><h2>Auf den Home-Bildschirm legen</h2></div>
+    <ol class="steps"><li>Öffne die App <b>Kurzbefehle</b> und tippe auf <b>+</b>.</li><li>Füge die Aktion <b>URL</b> hinzu und setze den Link zu diesem Bahnbuch ein.</li><li>Füge darunter die Aktion <b>URLs öffnen</b> hinzu.</li><li>Benenne den Kurzbefehl „Bahnbuch“, tippe oben auf den Namen und wähle <b>Zum Home-Bildschirm</b>. Dort kannst du ein eigenes Bild als Symbol wählen.</li></ol>
+    <p class="hint">Das Bahnbuch öffnet sich dann in Safari. Melde dich dort einmal bei claude.ai an, damit Einträge gespeichert und auf allen Geräten gleich sind.</p></div>`;
+}
+after.profil=()=>{
+  wireProfileForm();
+  const inp=$("#lenexFile");
+  if(inp){inp.addEventListener("change",()=>inp.files[0]&&readLenex(inp.files[0]));
+    const drop=$("#drop");drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("over")});drop.addEventListener("dragleave",()=>drop.classList.remove("over"));
+    drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("over");e.dataTransfer.files[0]&&readLenex(e.dataTransfer.files[0])});}
+  if(ui.imp){formOpen=true;$("#impAth").addEventListener("change",e=>{ui.imp.sel=+e.target.value;impPreview()});impPreview()}
+  const rf=$("#restoreFile");if(rf)rf.addEventListener("change",()=>rf.files[0]&&restore(rf.files[0]));
+};
+
+/* LENEX */
+const STROKE={FREE:"FR",BACK:"RU",BREAST:"BR",FLY:"SM",MEDLEY:"LA"};
+function lenexTime(t){const m=String(t||"").match(/^(\d+):(\d+):(\d+)\.(\d+)$/);return m?(+m[1])*360000+(+m[2])*6000+(+m[3])*100+Math.round(+("0."+m[4])*100):null}
+const norm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ß/g,"ss").trim();
+async function readLenex(file){
+  const err=$("#impErr");err.textContent="";
+  try{
+    let xml;const buf=await file.arrayBuffer();const head=new Uint8Array(buf.slice(0,2));
+    if(head[0]===0x50&&head[1]===0x4b){if(!window.JSZip)throw"Entpacken nicht möglich. Bitte die .lef-Datei direkt wählen.";const zip=await JSZip.loadAsync(buf);const f=Object.values(zip.files).find(f=>/\.(lef|xml)$/i.test(f.name));if(!f)throw"In der .lxf-Datei steckt keine LENEX-Datei.";xml=await f.async("string")}
+    else xml=new TextDecoder().decode(buf);
+    const doc=new DOMParser().parseFromString(xml,"application/xml");
+    if(doc.querySelector("parsererror"))throw"Die Datei ist kein gültiges XML.";
+    const M=doc.querySelector("MEET");if(!M)throw"Keine Wettkampfdaten in der Datei gefunden.";
+    const sess=M.querySelector("SESSION");
+    const meet={name:M.getAttribute("name")||"Wettkampf",ort:M.getAttribute("city")||"",bahn:/LCM/i.test(M.getAttribute("course")||"")?50:25,datum:(sess&&sess.getAttribute("date"))||"",zeitmessung:/MANUAL/i.test(M.getAttribute("timing")||"")?"hand":"elektronisch",notiz:""};
+    if(!meet.datum)throw"In der Datei fehlt das Wettkampfdatum.";
+    const events=new Map(),ranks=new Map(),starters=new Map();
+    M.querySelectorAll("EVENT").forEach(ev=>{const st=ev.querySelector("SWIMSTYLE");if(!st)return;const lage=STROKE[st.getAttribute("stroke")];if(+(st.getAttribute("relaycount")||1)>1||!lage)return;
+      events.set(ev.getAttribute("eventid"),{distanz:+st.getAttribute("distance"),lage});
+      ev.querySelectorAll("AGEGROUP").forEach(ag=>{const rk=[...ag.querySelectorAll("RANKING")];const n=rk.filter(x=>+x.getAttribute("place")>0).length;rk.forEach(r=>{const id=r.getAttribute("resultid"),pl=+r.getAttribute("place");if(id&&pl>0&&!ranks.has(id)){ranks.set(id,pl);starters.set(id,n)}})})});
+    const athletes=[];
+    M.querySelectorAll("CLUB").forEach(c=>{const verein=c.getAttribute("name")||c.getAttribute("shortname")||"";
+      c.querySelectorAll("ATHLETE").forEach(a=>{const ath={vorname:a.getAttribute("firstname")||"",nachname:a.getAttribute("lastname")||"",jahrgang:+(a.getAttribute("birthdate")||"0").slice(0,4),verein,results:[]};
+        a.querySelectorAll("RESULT").forEach(r=>{const ev=events.get(r.getAttribute("eventid"));if(!ev)return;
+          const st=(r.getAttribute("status")||"").toUpperCase();const status=st==="DSQ"?"DSQ":(st==="DNS"||st==="WDR")?"DNS":st==="DNF"?"DNF":"OK";
+          const zeit=status==="OK"?lenexTime(r.getAttribute("swimtime")):null;if(status==="OK"&&zeit==null)return;
+          const splits=[...r.querySelectorAll("SPLIT")].map(s=>({d:+s.getAttribute("distance"),t:lenexTime(s.getAttribute("swimtime"))})).filter(s=>s.t!=null).sort((x,y)=>x.d-y.d);
+          if(splits.length&&zeit!=null&&splits[splits.length-1].d<ev.distanz)splits.push({d:ev.distanz,t:zeit});
+          const rid=r.getAttribute("resultid");
+          const res={distanz:ev.distanz,lage:ev.lage,zeit,status,platz:status==="OK"?ranks.get(rid)||null:null,starter:starters.get(rid)||null};
+          if(splits.length>1)res.splits=splits;ath.results.push(res)});
+        if(ath.results.length)athletes.push(ath)})});
+    if(!athletes.length)throw"In der Datei wurden keine Einzelergebnisse gefunden.";
+    athletes.sort((x,y)=>x.nachname.localeCompare(y.nachname,"de")||x.vorname.localeCompare(y.vorname,"de"));
+    const score=a=>(norm(a.nachname)===norm(profile.nachname)?2:0)+(norm(a.vorname)===norm(profile.vorname)?2:0)+(a.jahrgang===profile.jahrgang?1:0);
+    let sel=0,bestS=-1;athletes.forEach((a,i)=>{const s=score(a);if(s>bestS){bestS=s;sel=i}});
+    ui.imp={meet,athletes,sel};render(true);
+    if(bestS<4)$("#impErr").textContent=`${fullName()} wurde in der Datei nicht eindeutig gefunden. Bitte die richtige Person auswählen.`;
+  }catch(x){err.textContent=typeof x==="string"?x:"Die Datei konnte nicht gelesen werden."}
+}
+function impPreview(){
+  const p=ui.imp,a=p.athletes[p.sel];
+  const existing=[...meets.entries()].find(([,m])=>m.name===p.meet.name&&m.datum===p.meet.datum);
+  $("#impPrev").innerHTML=`${existing?`<p class="small"><b>Dieser Wettkampf ist schon im Logbuch.</b> Neue Ergebnisse werden ergänzt, vorhandene übersprungen.</p>`:""}
+  <div class="list">${a.results.map(r=>`<div class="row"><span>${evName(r.distanz,r.lage)}</span><span class="btns">${medal(r)} ${timeCell(r)}</span></div>`).join("")}</div>`;
+}
+async function doImport(btn){
+  btn.disabled=true;btn.textContent="Wird übernommen …";
+  try{
+    const p=ui.imp,a=p.athletes[p.sel];
+    const existing=[...meets.entries()].find(([,m])=>m.name===p.meet.name&&m.datum===p.meet.datum);
+    const meetId=existing?existing[0]:newId();
+    const meet=existing?structuredClone(existing[1]):{...p.meet,results:[]};
+    const sig=r=>[r.distanz,r.lage,r.zeit,r.status].join("|");
+    const have=new Set((meet.results||[]).map(sig));let added=0;
+    for(const r of a.results){if(have.has(sig(r)))continue;meet.results.push({id:newId(),...r});have.add(sig(r));added++}
+    await putMeet(meetId,meet);
+    ui.imp=null;formOpen=false;toast(`${added} ${added===1?"Ergebnis":"Ergebnisse"} übernommen`);location.hash="wettkampf-"+meetId;
+  }catch(x){btn.disabled=false;btn.textContent="Ergebnisse übernehmen";writeError(x)}
+}
+
+/* Export / Sicherung */
+async function save(filename,data,label){
+  const msg=$("#expMsg");
+  if(!downloads){msg.textContent="Herunterladen ist in dieser Ansicht nicht verfügbar.";return}
+  try{await downloads.save({filename,data});msg.textContent=label+" gespeichert."}
+  catch(e){msg.textContent=e&&e.code==="declined"?"Download abgebrochen.":"Herunterladen hat nicht geklappt."}
+}
+function exportCsv(){
+  const q=v=>{v=String(v??"");return/[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const rows=[["Datum","Wettkampf","Ort","Bahn","Strecke","Lage","Zeit","Platz","Starter","Status","Zwischenzeiten"]];
+  for(const r of allResults().sort((x,y)=>x.datum.localeCompare(y.datum))){const m=meets.get(r.meetId);
+    rows.push([fmtDate(r.datum),r.meetName,m.ort,r.bahn,r.distanz,LAGEN[r.lage],r.zeit!=null?fmt(r.zeit):"",r.platz||"",r.starter||"",r.status,(r.splits||[]).map(s=>s.d+" m "+fmt(s.t)).join(" | ")])}
+  const who=profile?norm(profile.vorname+"-"+profile.nachname).replace(/[^a-z0-9-]/g,""):"bahnbuch";
+  save(`${who}-ergebnisse-${new Date().toISOString().slice(0,10)}.csv`,"﻿"+rows.map(r=>r.map(q).join(";")).join("\r\n"),"CSV-Datei");
+}
+function exportJson(){
+  save(`bahnbuch-sicherung-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify({format:"bahnbuch-1",exportiert:new Date().toISOString(),profile,meets:Object.fromEntries(meets)},null,1),"Sicherung");
+}
+async function restore(file){
+  const msg=$("#expMsg");
+  try{const d=JSON.parse(await file.text());if(d.format!=="bahnbuch-1"||!d.meets)throw 0;
+    if(d.profile)await putProfile(d.profile);let n=0;for(const [id,m] of Object.entries(d.meets)){if(/^[A-Za-z0-9_-]+$/.test(id)&&m&&m.datum){await putMeet(id,m);n++}}
+    toast(`Sicherung eingespielt: ${n} Wettkämpfe`);
+  }catch(x){msg.textContent=x&&x.code?"Einspielen hat nicht geklappt.":"Das ist keine Bahnbuch-Sicherung."}
+}
+
+/* ---------- Klicks ---------- */
+const actions={
+  addToMeet:b=>{ui.erfMeet=b.dataset.id;ui.editRef=null;location.hash="erfassen"},
+  editRes:b=>{ui.editRef={meet:b.dataset.meet,id:b.dataset.id};location.hash="erfassen"},
+  cancelEdit:()=>{const m=ui.editRef.meet;ui.editRef=null;location.hash="wettkampf-"+m},
+  editMeet:()=>{const f=$("#meetEdit");f.hidden=!f.hidden;formOpen=!f.hidden;if(!f.hidden)f.scrollIntoView({behavior:"smooth",block:"start"})},
+  delRes:async b=>{const m=structuredClone(meets.get(b.dataset.meet));m.results=m.results.filter(r=>r.id!==b.dataset.id);try{await putMeet(b.dataset.meet,m);toast("Ergebnis gelöscht")}catch(e){writeError(e)}},
+  delMeet:async b=>{try{await delMeet(b.dataset.id);toast("Wettkampf gelöscht");location.hash="wettkaempfe"}catch(e){writeError(e)}},
+  clearExamples:async b=>{b.disabled=true;try{for(const [id,m] of [...meets])if(m.beispiel)await delMeet(id);if(profile&&profile.beispiel)await delProfile();toast("Beispieldaten entfernt")}catch(e){writeError(e)}},
+  doImport:b=>doImport(b),
+  cancelImport:()=>{ui.imp=null;formOpen=false;render(true)},
+  exportCsv,exportJson
+};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act],[data-arm]");if(!b)return;
+  if(b.dataset.arm){ // zweistufiges Löschen statt Bestätigungsdialog
+    if(!b.classList.contains("armed")){b.classList.add("armed");b.dataset.label=b.textContent;b.textContent="Wirklich löschen?";setTimeout(()=>{if(b.isConnected){b.classList.remove("armed");b.textContent=b.dataset.label}},3500);return}
+    actions[b.dataset.arm](b);return}
+  actions[b.dataset.act]&&actions[b.dataset.act](b);
+});
+
+/* ---------- Start ---------- */
+async function boot(){
+  render(true);
+  if(!window.claude||!window.claude.use){mode="local";render(true);return}
+  try{downloads=await window.claude.use("downloads")}catch{}
+  try{const u=await window.claude.use("user");if(u&&(await u.can("data.write"))===false)canWrite=false}catch{}
+  try{db=await window.claude.use("db")}catch{db=null}
+  if(!db){mode="local";render(true);return}
+  const got={p:false,m:false};let firstP=false,firstM=false;
+  const timer=setTimeout(()=>{loadNote="Das Logbuch ist gerade nicht erreichbar. Angezeigte Daten sind eventuell nicht aktuell.";mode="ready";render(true)},10000);
+  const done=()=>{if(got.p&&got.m){clearTimeout(timer);if(loadNote){loadNote="";return true}}return false};
+  const fail=e=>{clearTimeout(timer);if(e.code!=="revoked")loadNote="Das Logbuch konnte nicht geladen werden. Bitte später erneut öffnen.";mode="ready";render(true)};
+  const update=()=>{const cleared=done();if(firstP&&firstM){const was=mode;mode="ready";render(was!=="ready"||cleared)}};
+  db.doc("profile/main").onSnapshot(s=>{profile=s.exists?s.data():null;firstP=true;if(!s.metadata.fromCache)got.p=true;update()},fail);
+  db.collection("meets").onSnapshot(s=>{meets.clear();for(const d of s.docs)meets.set(d.id,d.data());firstM=true;if(!s.metadata.fromCache)got.m=true;update()},fail);
+}
+boot();
+</script>
